@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Meetly · Videollamadas con grabación</title>
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <style>
@@ -66,6 +66,20 @@ input:focus{border-color:var(--ac);box-shadow:0 0 0 4px rgba(124,156,255,.18)}
 .rb{width:50px;height:50px;border-radius:50%;background:var(--sf2);display:flex;align-items:center;justify-content:center;transition:transform .18s,background .2s,box-shadow .2s;position:relative;flex:none}
 .rb:hover{transform:translateY(-3px) scale(1.06);background:rgba(255,255,255,.22)}
 .rb:active{transform:scale(.92)}
+
+/* Barra diagonal cuando la cámara o micrófono se bloquean o desactivan */
+.rb.off::before {
+  content: ""; position: absolute;
+  width: 32px; height: 3px;
+  background: #fff;
+  transform: rotate(-45deg) scale(0);
+  border-radius: 2px;
+  box-shadow: 0 0 0 3px var(--rd);
+  z-index: 2; pointer-events: none;
+  animation: slash .25s forwards cubic-bezier(.2,.8,.2,1);
+}
+@keyframes slash { to { transform: rotate(-45deg) scale(1); } }
+
 .rb.off{background:var(--rd);box-shadow:0 6px 20px rgba(255,77,106,.45)}
 .rb.on{background:var(--g);color:#fff;box-shadow:0 6px 20px rgba(124,156,255,.45)}
 .rb.rec.on{background:var(--rd);box-shadow:0 0 0 0 rgba(255,77,106,.7);animation:ring 1.6s infinite}
@@ -139,6 +153,20 @@ input:focus{border-color:var(--ac);box-shadow:0 0 0 4px rgba(124,156,255,.18)}
 #rx button:hover{background:var(--sf2);transform:scale(1.3) translateY(-4px)}
 #toast{position:fixed;bottom:110px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(255,255,255,.95);color:#12132a;padding:11px 20px;border-radius:14px;font-size:14px;opacity:0;transition:.3s;pointer-events:none;z-index:30;font-weight:500;box-shadow:0 10px 30px rgba(0,0,0,.4)}
 #toast.s{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ===== Superposición al intentar salir (Swipe back) ===== */
+#exit-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px); z-index: 9999; display: flex; align-items: center; justify-content: center;
+}
+.eo-box {
+  background: var(--sf); border: 1px solid var(--sf2); padding: 28px; border-radius: 24px;
+  text-align: center; max-width: 90vw; width: 340px; animation: tin .35s cubic-bezier(.2,.9,.3,1.2);
+}
+.eo-box h3 { font-size: 20px; font-weight: 600; margin-bottom: 10px; }
+.eo-box p { font-size: 14px; color: var(--mt); margin-bottom: 24px; line-height: 1.5; }
+.eo-btns { display: flex; gap: 12px; justify-content: center; }
+
 @media(max-width:860px){
  #side{position:fixed;inset:10px;width:auto;z-index:9;margin:0}
  #info{display:none}#ctl{padding:6px 8px 14px;justify-content:center;flex-wrap:wrap}
@@ -183,7 +211,13 @@ input:focus{border-color:var(--ac);box-shadow:0 0 0 4px rgba(124,156,255,.18)}
   <div id="main">
     <div id="grid"></div>
     <aside id="side" class="hide">
-      <div class="tabs"><button data-p="chat" class="a">Chat</button><button data-p="ppl">Personas</button><button data-p="rcs">Grabaciones</button></div>
+      <!-- BOTÓN "✕" INTEGRADO EN LAS PESTAÑAS -->
+      <div class="tabs">
+        <button data-p="chat" class="a">Chat</button>
+        <button data-p="ppl">Personas</button>
+        <button data-p="rcs">Grabaciones</button>
+        <button id="x-side" style="flex:0 0 44px; color:var(--mt); font-size:18px; border-bottom: 2px solid transparent;" title="Cerrar panel">✕</button>
+      </div>
       <div class="pn a" id="p-chat">
         <div id="msgs"><div class="empty">Los mensajes solo los ve quien está en la llamada.</div></div>
         <div class="cin"><input id="ci" placeholder="Escribe un mensaje" autocomplete="off"><button class="rb on" id="cs" style="width:46px;height:46px">➤</button></div>
@@ -214,6 +248,18 @@ input:focus{border-color:var(--ac);box-shadow:0 0 0 4px rgba(124,156,255,.18)}
 </div>
 <video id="pipv" muted playsinline autoplay></video>
 <div id="toast"></div>
+
+<!-- Superposición de advertencia de salida -->
+<div id="exit-overlay" class="hide">
+  <div class="eo-box">
+    <h3>¿Salir de la llamada?</h3>
+    <p>Deslizaste para atrás. ¿Estás seguro de que deseas abandonar la reunión?</p>
+    <div class="eo-btns">
+      <button class="pill sec" id="eo-stay">Quedarme</button>
+      <button class="pill" style="background:var(--rd)" id="eo-leave">Salir</button>
+    </div>
+  </div>
+</div>
 
 <script>
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
@@ -429,7 +475,10 @@ function showRoom(){
   const t=addTile('me',name+' (Tú)',name,true);t.classList.add('me');
   const v=t.querySelector('video');v.srcObject=local;v.muted=true;t.classList.toggle('nocam',!cam);t.classList.toggle('mutedm',!mic);
   addAudio('me',local);t0=Date.now();updFlip();initPip();renderPeople();layout();
-  try{history.replaceState(null,'','#'+code)}catch(e){}
+  
+  // Modificado para detectar el "deslizar para atrás" (Swipe back)
+  try{history.pushState({room:true},'','#'+code)}catch(e){}
+  
   toast(isHost?'Reunión creada · '+fc(code):'Te uniste a la reunión');
 }
 
@@ -718,7 +767,28 @@ $('#be').onclick=()=>{
   PE.forEach(p=>{try{p.call&&p.call.close()}catch(e){}});try{peer&&peer.destroy()}catch(e){}
   location.href=location.href.split('#')[0];
 };
-window.onbeforeunload=e=>{if(nrec||rec){e.preventDefault();e.returnValue=''}};
+
+/* ===== Cerrar panel (Móvil y PC) y Prevenir salida ===== */
+$('#x-side').onclick=()=>$('#side').classList.add('hide');
+
+window.addEventListener('popstate',(e)=>{
+  if(t0){ 
+    $('#exit-overlay').classList.remove('hide'); 
+    try{history.pushState({room:true},'','#'+code)}catch(err){}
+  }
+});
+$('#eo-stay').onclick=()=>$('#exit-overlay').classList.add('hide');
+$('#eo-leave').onclick=()=>{
+  $('#exit-overlay').classList.add('hide');
+  $('#be').click(); 
+};
+
+window.onbeforeunload = e => {
+  if (t0) { 
+    e.preventDefault();
+    e.returnValue = ''; 
+  }
+};
 </script>
 </body>
 </html>
