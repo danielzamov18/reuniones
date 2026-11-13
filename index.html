@@ -16,7 +16,7 @@ svg{width:22px;height:22px;fill:currentColor}
 ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:var(--sf2);border-radius:3px}
 
 /* ===== fondo animado ===== */
-.bg{position:fixed;inset:0;overflow:hidden;z-index:0;background:radial-gradient(circle at 20% 10%,#1a1b3a,#0d0e1a 60%)}
+.bg{position:fixed;inset:0;overflow:hidden;z-index:-1;pointer-events:none;background:radial-gradient(circle at 20% 10%,#1a1b3a,#0d0e1a 60%)}
 .bg i{position:absolute;border-radius:50%;filter:blur(90px);opacity:.55;animation:float 18s ease-in-out infinite}
 .bg i:nth-child(1){width:46vmax;height:46vmax;background:#5b6cff;top:-14vmax;left:-10vmax}
 .bg i:nth-child(2){width:40vmax;height:40vmax;background:#b44cff;bottom:-16vmax;right:-8vmax;animation-delay:-6s}
@@ -38,7 +38,7 @@ svg{width:22px;height:22px;fill:currentColor}
 @keyframes glow{50%{box-shadow:0 0 28px rgba(192,132,252,.7)}}
 .card h1{font-size:15px;font-weight:400;color:var(--mt);line-height:1.5}
 label{font-size:12px;color:var(--mt);text-transform:uppercase;letter-spacing:.08em;margin-bottom:-6px}
-input,textarea{width:100%;background:rgba(0,0,0,.28);border:1px solid var(--sf2);color:var(--tx);border-radius:14px;padding:14px 16px;font:inherit;outline:none;transition:.2s}
+input,textarea{position:relative;z-index:2;pointer-events:auto;-webkit-user-select:text;user-select:text;width:100%;background:rgba(0,0,0,.28);border:1px solid var(--sf2);color:var(--tx);border-radius:14px;padding:14px 16px;font:inherit;outline:none;transition:.2s}
 input:focus{border-color:var(--ac);box-shadow:0 0 0 4px rgba(124,156,255,.18)}
 #cd{text-transform:uppercase;letter-spacing:.3em;text-align:center;font-size:20px;font-weight:600}
 .seg{display:grid;grid-template-columns:1fr 1fr;background:rgba(0,0,0,.28);border-radius:14px;padding:4px;position:relative}
@@ -241,6 +241,7 @@ const PE=new Map(),A=new Map();
 
 /* ===== prejoin ===== */
 try{$('#nm').value=localStorage.getItem('meetly-name')||''}catch(e){}
+setTimeout(()=>{try{$('#nm').focus()}catch(e){}},300);
 (async()=>{
   try{local=await navigator.mediaDevices.getUserMedia({video:true,audio:true})}
   catch(e){
