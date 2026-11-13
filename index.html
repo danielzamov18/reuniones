@@ -2,15 +2,16 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Meetly · Videollamadas con grabación</title>
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <style>
 :root{--bg:#0d0e1a;--sf:rgba(255,255,255,.07);--sf2:rgba(255,255,255,.13);--tx:#f1f2ff;--mt:#a3a6c4;--ac:#7c9cff;--ac2:#c084fc;--rd:#ff4d6a;--gr:#3ddc97;--g:linear-gradient(135deg,#7c9cff,#c084fc)}
 *{box-sizing:border-box;margin:0}
-html,body{height:100%}
+/* Cambiado a 100dvh para evitar problemas con la barra de URL en móviles */
+html,body{height:100dvh}
 body{font-family:'Google Sans','Segoe UI',Roboto,system-ui,sans-serif;background:var(--bg);color:var(--tx);overflow:hidden}
-button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button,select{font:inherit;color:inherit;cursor:pointer;border:0;background:none;outline:none}
 svg{width:22px;height:22px;fill:currentColor}
 .hide{display:none!important}
 ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:var(--sf2);border-radius:3px}
@@ -29,9 +30,8 @@ svg{width:22px;height:22px;fill:currentColor}
 @keyframes rise{from{opacity:0;transform:translateY(30px) scale(.97)}}
 .pv{position:relative;width:min(620px,92vw);aspect-ratio:16/10;background:#000;border-radius:24px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.5),0 0 0 1px var(--sf2)}
 .pv video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
-.pv .bar{position:absolute;bottom:16px;left:0;right:0;display:flex;justify-content:center;gap:14px}
+.pv .bar{position:absolute;bottom:16px;left:0;right:0;display:flex;justify-content:center;gap:14px;z-index:5}
 .tile.me.back video:not(.scr){transform:none}
-#pipv{position:fixed;left:-9999px;top:0;width:320px;height:180px;pointer-events:none}
 #perm{position:absolute;inset:0;z-index:4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:28px;text-align:center;background:radial-gradient(circle at 50% 30%,#23244a,#12132a)}
 #perm .pi{width:76px;height:76px;border-radius:50%;background:var(--g);display:flex;align-items:center;justify-content:center;animation:ring2 2s infinite}
 #perm .pi svg{width:34px;height:34px;fill:#fff}
@@ -47,8 +47,9 @@ svg{width:22px;height:22px;fill:currentColor}
 @keyframes glow{50%{box-shadow:0 0 28px rgba(192,132,252,.7)}}
 .card h1{font-size:15px;font-weight:400;color:var(--mt);line-height:1.5}
 label{font-size:12px;color:var(--mt);text-transform:uppercase;letter-spacing:.08em;margin-bottom:-6px}
-input,textarea{position:relative;z-index:2;pointer-events:auto;-webkit-user-select:text;user-select:text;width:100%;background:rgba(0,0,0,.28);border:1px solid var(--sf2);color:var(--tx);border-radius:14px;padding:14px 16px;font:inherit;outline:none;transition:.2s}
-input:focus{border-color:var(--ac);box-shadow:0 0 0 4px rgba(124,156,255,.18)}
+input,textarea,select{position:relative;z-index:2;pointer-events:auto;-webkit-user-select:text;user-select:text;width:100%;background:rgba(0,0,0,.28);border:1px solid var(--sf2);color:var(--tx);border-radius:14px;padding:14px 16px;font:inherit;outline:none;transition:.2s}
+select{appearance:none;cursor:pointer}
+input:focus,select:focus{border-color:var(--ac);box-shadow:0 0 0 4px rgba(124,156,255,.18)}
 #cd{text-transform:uppercase;letter-spacing:.3em;text-align:center;font-size:20px;font-weight:600}
 .seg{display:grid;grid-template-columns:1fr 1fr;background:rgba(0,0,0,.28);border-radius:14px;padding:4px;position:relative}
 .seg button{position:relative;z-index:1;padding:10px 6px;font-size:14px;color:var(--mt);transition:.25s;border-radius:10px}
@@ -66,33 +67,27 @@ input:focus{border-color:var(--ac);box-shadow:0 0 0 4px rgba(124,156,255,.18)}
 .rb{width:50px;height:50px;border-radius:50%;background:var(--sf2);display:flex;align-items:center;justify-content:center;transition:transform .18s,background .2s,box-shadow .2s;position:relative;flex:none}
 .rb:hover{transform:translateY(-3px) scale(1.06);background:rgba(255,255,255,.22)}
 .rb:active{transform:scale(.92)}
-
-/* Barra diagonal cuando la cámara o micrófono se bloquean o desactivan */
-.rb.off::before {
-  content: ""; position: absolute;
-  width: 32px; height: 3px;
-  background: #fff;
-  transform: rotate(-45deg) scale(0);
-  border-radius: 2px;
-  box-shadow: 0 0 0 3px var(--rd);
-  z-index: 2; pointer-events: none;
-  animation: slash .25s forwards cubic-bezier(.2,.8,.2,1);
-}
-@keyframes slash { to { transform: rotate(-45deg) scale(1); } }
-
 .rb.off{background:var(--rd);box-shadow:0 6px 20px rgba(255,77,106,.45)}
 .rb.on{background:var(--g);color:#fff;box-shadow:0 6px 20px rgba(124,156,255,.45)}
 .rb.rec.on{background:var(--rd);box-shadow:0 0 0 0 rgba(255,77,106,.7);animation:ring 1.6s infinite}
 @keyframes ring{70%{box-shadow:0 0 0 14px rgba(255,77,106,0)}100%{box-shadow:0 0 0 0 rgba(255,77,106,0)}}
 .rb.end{background:var(--rd);width:68px;border-radius:26px}
-.rb[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:62px;background:#000c;padding:5px 10px;border-radius:8px;font-size:12px;white-space:nowrap;pointer-events:none;animation:rise .2s}
+.rb[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:62px;background:#000c;padding:5px 10px;border-radius:8px;font-size:12px;white-space:nowrap;pointer-events:none;animation:rise .2s;z-index:10}
 .badge{position:absolute;top:-3px;right:-3px;background:var(--rd);color:#fff;font-size:11px;border-radius:10px;min-width:19px;height:19px;display:flex;align-items:center;justify-content:center;padding:0 5px;animation:pop .3s}
 @keyframes pop{from{transform:scale(0)}}
+
+/* Barra diagonal cuando la cámara o micrófono se bloquean o desactivan */
+.rb.off::before {
+  content: ""; position: absolute; width: 28px; height: 3px; background: #fff;
+  transform: rotate(-45deg) scale(0); border-radius: 2px; box-shadow: 0 0 0 3px var(--rd);
+  pointer-events: none; animation: slash .25s forwards cubic-bezier(.2,.8,.2,1); z-index:2;
+}
+@keyframes slash { to { transform: rotate(-45deg) scale(1); } }
 
 /* ===== sala ===== */
 #room{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;animation:fade .5s}
 @keyframes fade{from{opacity:0}}
-#main{flex:1;display:flex;min-height:0}
+#main{flex:1;display:flex;min-height:0;position:relative}
 #grid{flex:1;display:grid;gap:12px;padding:14px;min-width:0}
 .tile{position:relative;background:#16172e;border-radius:20px;overflow:hidden;min-height:0;cursor:pointer;box-shadow:0 0 0 1px var(--sf2);transition:box-shadow .25s,transform .25s;animation:tin .5s cubic-bezier(.2,.9,.3,1.2)}
 @keyframes tin{from{opacity:0;transform:scale(.8)}}
@@ -109,8 +104,8 @@ input:focus{border-color:var(--ac);box-shadow:0 0 0 4px rgba(124,156,255,.18)}
 .lb{position:absolute;left:12px;bottom:12px;display:flex;gap:8px;align-items:center;font-size:14px;background:rgba(0,0,0,.45);backdrop-filter:blur(8px);padding:6px 12px;border-radius:12px}
 .tile.mutedm .lb::before{content:"🔇";font-size:12px}
 .hand{display:none;font-size:12px;background:var(--g);padding:2px 8px;border-radius:8px}
-.tile.up .hand{display:inline;animation:wave 1s infinite}
-@keyframes wave{50%{transform:rotate(-8deg) scale(1.1)}}
+.tile.up .hand{display:inline-block;animation:wave 1s infinite}
+@keyframes wave{50%{transform:rotate(-15deg) scale(1.1)}}
 .pinb{position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;opacity:0;transition:.2s}
 .pinb svg{width:16px;height:16px}
 .tile:hover .pinb,.tile.pin .pinb{opacity:1}
@@ -123,7 +118,9 @@ input:focus{border-color:var(--ac);box-shadow:0 0 0 4px rgba(124,156,255,.18)}
 #recb{position:absolute;top:18px;right:20px;background:rgba(255,77,106,.92);padding:8px 16px;border-radius:18px;font-size:13px;z-index:5;display:flex;gap:8px;align-items:center;animation:rise .4s;box-shadow:0 8px 24px rgba(255,77,106,.4)}
 #recb:before{content:"";width:9px;height:9px;border-radius:50%;background:#fff;animation:blink 1s infinite}
 @keyframes blink{50%{opacity:.2}}
-#side{width:350px;background:rgba(20,21,41,.85);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--sf2);margin:14px 14px 14px 0;border-radius:22px;display:flex;flex-direction:column;overflow:hidden;animation:slide .35s cubic-bezier(.2,.8,.2,1)}
+
+/* ===== Panel lateral ===== */
+#side{width:350px;background:rgba(20,21,41,.85);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--sf2);margin:14px 14px 14px 0;border-radius:22px;display:flex;flex-direction:column;overflow:hidden;animation:slide .35s cubic-bezier(.2,.8,.2,1);z-index:10}
 @keyframes slide{from{opacity:0;transform:translateX(40px)}}
 .tabs{display:flex;border-bottom:1px solid var(--sf2)}
 .tabs button{flex:1;padding:15px 6px;font-size:14px;color:var(--mt);border-bottom:2px solid transparent;transition:.2s}
@@ -141,6 +138,8 @@ input:focus{border-color:var(--ac);box-shadow:0 0 0 4px rgba(124,156,255,.18)}
 .rc video{width:100%;border-radius:10px;background:#000}
 .rc a{color:var(--ac);text-decoration:none;font-weight:500}
 .empty{color:var(--mt);font-size:13px;text-align:center;margin-top:30px;line-height:1.6}
+
+/* ===== Controles ===== */
 #ctl{display:flex;align-items:center;justify-content:space-between;padding:6px 24px 20px;gap:12px}
 #ctl .c{display:flex;gap:12px;align-items:center}
 .mid{background:var(--sf);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--sf2);padding:10px 16px;border-radius:40px;box-shadow:0 20px 50px rgba(0,0,0,.4)}
@@ -151,26 +150,35 @@ input:focus{border-color:var(--ac);box-shadow:0 0 0 4px rgba(124,156,255,.18)}
 #rx{position:absolute;bottom:96px;left:50%;transform:translateX(-50%);background:rgba(20,21,41,.92);backdrop-filter:blur(20px);border:1px solid var(--sf2);padding:8px 12px;border-radius:30px;display:flex;gap:4px;z-index:8;animation:rise .25s}
 #rx button{font-size:26px;width:46px;height:46px;border-radius:50%;transition:.15s}
 #rx button:hover{background:var(--sf2);transform:scale(1.3) translateY(-4px)}
+
+/* ===== Overlays y Toast ===== */
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 9999; display: flex; align-items: center; justify-content: center; }
+.modal-card { width: 340px; background: var(--sf); border: 1px solid var(--sf2); padding: 24px; border-radius: 24px; animation: tin .3s; }
+.modal-card h3 { font-size: 20px; font-weight: 600; margin-bottom: 12px; text-align: center; }
+.modal-card p { font-size: 14px; color: var(--mt); margin-bottom: 24px; text-align: center; line-height: 1.5; }
 #toast{position:fixed;bottom:110px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(255,255,255,.95);color:#12132a;padding:11px 20px;border-radius:14px;font-size:14px;opacity:0;transition:.3s;pointer-events:none;z-index:30;font-weight:500;box-shadow:0 10px 30px rgba(0,0,0,.4)}
 #toast.s{opacity:1;transform:translateX(-50%) translateY(0)}
 
-/* ===== Superposición al intentar salir (Swipe back) ===== */
-#exit-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px); z-index: 9999; display: flex; align-items: center; justify-content: center;
-}
-.eo-box {
-  background: var(--sf); border: 1px solid var(--sf2); padding: 28px; border-radius: 24px;
-  text-align: center; max-width: 90vw; width: 340px; animation: tin .35s cubic-bezier(.2,.9,.3,1.2);
-}
-.eo-box h3 { font-size: 20px; font-weight: 600; margin-bottom: 10px; }
-.eo-box p { font-size: 14px; color: var(--mt); margin-bottom: 24px; line-height: 1.5; }
-.eo-btns { display: flex; gap: 12px; justify-content: center; }
-
+/* ===== Media Queries Móviles ===== */
 @media(max-width:860px){
- #side{position:fixed;inset:10px;width:auto;z-index:9;margin:0}
- #info{display:none}#ctl{padding:6px 8px 14px;justify-content:center;flex-wrap:wrap}
- .rb{width:44px;height:44px}.rb.end{width:58px}.mid{padding:8px 10px}#ctl .c{gap:8px}
+  /* Rediseño del pre-join para móviles */
+  .pwrap { flex-direction: column; padding-bottom: 30px; gap: 20px; max-width: 100%; }
+  .pv { width: 100%; aspect-ratio: 4/3; }
+  
+  /* Panel lateral como Bottom Sheet (Hoja que sube desde abajo) */
+  #side{
+    position:fixed; inset:auto 0 0 0; width:100%; height:75dvh; margin:0;
+    border-radius:24px 24px 0 0; box-shadow:0 -10px 40px rgba(0,0,0,.6); border-bottom:none;
+    animation:slideUp .35s cubic-bezier(.2,.8,.2,1);
+  }
+  @keyframes slideUp{from{transform:translateY(100%)}}
+  
+  #info{display:none} 
+  #ctl{padding:6px 8px calc(14px + env(safe-area-inset-bottom)); justify-content:center; flex-wrap:wrap}
+  .mid{padding:8px 10px; flex-wrap:wrap; justify-content:center; border-radius:24px} 
+  .rb{width:44px; height:44px} .rb.end{width:58px} #ctl .c{gap:8px}
+  #rx { bottom: calc(env(safe-area-inset-bottom) + 110px); flex-wrap: wrap; justify-content: center; width: 90vw; border-radius: 20px; }
+  #toast { bottom: calc(env(safe-area-inset-bottom) + 120px); }
 }
 </style>
 </head>
@@ -183,7 +191,11 @@ input:focus{border-color:var(--ac);box-shadow:0 0 0 4px rgba(124,156,255,.18)}
     <div class="pv">
       <video id="pv" autoplay playsinline muted></video>
       <div id="perm" class="hide"><div class="pi" id="pi"></div><h3 id="pt"></h3><p id="pd"></p><button class="pill" id="pb">Permitir acceso</button><button class="lnk" id="ps">Entrar sin cámara ni micrófono</button></div>
-      <div class="bar"><button class="rb" id="pm" data-tip="Micrófono"></button><button class="rb" id="pc" data-tip="Cámara"></button></div>
+      <div class="bar">
+        <button class="rb" id="pm" data-tip="Micrófono"></button>
+        <button class="rb" id="pc" data-tip="Cámara"></button>
+        <button class="rb" id="pcg" data-tip="Ajustes"></button>
+      </div>
     </div>
     <div class="card">
       <div class="logo"><b id="lg"></b>Meetly</div>
@@ -211,12 +223,12 @@ input:focus{border-color:var(--ac);box-shadow:0 0 0 4px rgba(124,156,255,.18)}
   <div id="main">
     <div id="grid"></div>
     <aside id="side" class="hide">
-      <!-- BOTÓN "✕" INTEGRADO EN LAS PESTAÑAS -->
+      <!-- Botón "✕" añadido a las pestañas -->
       <div class="tabs">
         <button data-p="chat" class="a">Chat</button>
         <button data-p="ppl">Personas</button>
         <button data-p="rcs">Grabaciones</button>
-        <button id="x-side" style="flex:0 0 44px; color:var(--mt); font-size:18px; border-bottom: 2px solid transparent;" title="Cerrar panel">✕</button>
+        <button id="x-side" style="flex:0 0 44px; color:var(--mt); font-size:18px; border-bottom: 2px solid transparent" title="Cerrar panel">✕</button>
       </div>
       <div class="pn a" id="p-chat">
         <div id="msgs"><div class="empty">Los mensajes solo los ve quien está en la llamada.</div></div>
@@ -236,25 +248,37 @@ input:focus{border-color:var(--ac);box-shadow:0 0 0 4px rgba(124,156,255,.18)}
       <button class="rb" id="bx" data-tip="Reacciones"></button>
       <button class="rb rec" id="br" data-tip="Grabar (G)"></button>
       <button class="rb" id="bh" data-tip="Levantar la mano (H)"></button>
+      <button class="rb hide" id="bcg" data-tip="Ajustes"></button>
       <button class="rb end" id="be" data-tip="Salir"></button>
     </div>
-    <div class="c" style="min-width:240px;justify-content:flex-end">
-      <button class="rb hide" id="bpip" data-tip="Mini ventana (P)"></button>
+    <div class="c" style="min-width:auto;justify-content:flex-end">
+      <button class="rb" id="bpip" data-tip="Mini ventana (P)"></button>
       <button class="rb" id="bi" data-tip="Copiar enlace"></button>
       <button class="rb" id="bp" data-tip="Personas"></button>
       <button class="rb" id="bt" data-tip="Chat"><span class="badge hide" id="bg">0</span></button>
     </div>
   </div>
 </div>
-<video id="pipv" muted playsinline autoplay></video>
 <div id="toast"></div>
 
-<!-- Superposición de advertencia de salida -->
-<div id="exit-overlay" class="hide">
-  <div class="eo-box">
+<!-- Modal Configuración -->
+<div id="cfg-modal" class="overlay hide">
+  <div class="modal-card">
+    <h3>Ajustes</h3>
+    <label>Micrófono</label>
+    <select id="cfg-mic" style="margin-bottom: 12px"><option value="">Predeterminado</option></select>
+    <label>Cámara</label>
+    <select id="cfg-cam" style="margin-bottom: 24px"><option value="">Predeterminado</option></select>
+    <button class="pill" id="cfg-close" style="width: 100%">Listo</button>
+  </div>
+</div>
+
+<!-- Modal Salida (Swipe Back) -->
+<div id="exit-overlay" class="overlay hide">
+  <div class="modal-card">
     <h3>¿Salir de la llamada?</h3>
     <p>Deslizaste para atrás. ¿Estás seguro de que deseas abandonar la reunión?</p>
-    <div class="eo-btns">
+    <div style="display:flex; gap:12px; justify-content:center">
       <button class="pill sec" id="eo-stay">Quedarme</button>
       <button class="pill" style="background:var(--rd)" id="eo-leave">Salir</button>
     </div>
@@ -276,9 +300,10 @@ copy:'M16 1H4a2 2 0 0 0-2 2v14h2V3h12zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2
 pip:'M19 7h-8v6h8V7zm2-4H3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm0 16H3V5h18v14z',
 flip:'M12 4V1L8 5l4 4V6a6 6 0 0 1 5.7 7.9l1.5 1.5A8 8 0 0 0 12 4zm-5.7 2.1L4.8 7.6A8 8 0 0 0 12 20v3l4-4-4-4v3a6 6 0 0 1-5.7-7.9z',
 smile:'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-3.5 7.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm7 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zM12 18c-2.300 0-4.200-1.400-5-3.500h10c-.8 2.100-2.700 3.500-5 3.500z',
-pin:'M16 9V4h1V2H7v2h1v5l-2 3v2h5.2v7h1.6v-7H18v-2z'};
+pin:'M16 9V4h1V2H7v2h1v5l-2 3v2h5.2v7h1.6v-7H18v-2z',
+gear:'M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z'};
 const svg=k=>`<svg viewBox="0 0 24 24"><path d="${IC[k]}"/></svg>`;
-[['pm','mic'],['pc','cam'],['bm','mic'],['bc','cam'],['bs','scr'],['bf','flip'],['bpip','pip'],['bx','smile'],['br','rec'],['bh','hand'],['be','end'],['bi','copy'],['bp','ppl'],['bt','chat']].forEach(([i,k])=>$('#'+i).insertAdjacentHTML('afterbegin',svg(k)));
+[['pm','mic'],['pc','cam'],['pcg','gear'],['bm','mic'],['bc','cam'],['bs','scr'],['bf','flip'],['bpip','pip'],['bx','smile'],['br','rec'],['bh','hand'],['bcg','gear'],['be','end'],['bi','copy'],['bp','ppl'],['bt','chat']].forEach(([i,k])=>$('#'+i).insertAdjacentHTML('afterbegin',svg(k)));
 $('#lg').innerHTML=svg('cam');$('#pi').innerHTML=svg('cam');
 
 /* ===== utilidades ===== */
@@ -297,16 +322,42 @@ const link=()=>location.href.split('#')[0]+'#'+code;
 /* ===== estado ===== */
 let local=new MediaStream(),name='',mic=false,cam=false,hand=false,scrTrack=null,hasCam=false,hasMic=false,facing='user';
 let mode='new',code='',peer=null,isHost=false,pinned=null,t0=0,unread=0,actx=null,dest=null;
+let selMic='', selCam='';
 const PE=new Map(),A=new Map();
+
+/* Configuración de Sonido - Levantar la mano */
+function playHandSound() {
+  if (!actx || actx.state !== 'running') return;
+  const osc = actx.createOscillator(), g = actx.createGain();
+  osc.connect(g); g.connect(actx.destination);
+  osc.type = 'sine'; osc.frequency.setValueAtTime(500, actx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(1000, actx.currentTime + 0.1);
+  g.gain.setValueAtTime(0, actx.currentTime);
+  g.gain.linearRampToValueAtTime(0.2, actx.currentTime + 0.05);
+  g.gain.exponentialRampToValueAtTime(0.01, actx.currentTime + 0.3);
+  osc.start(actx.currentTime); osc.stop(actx.currentTime + 0.3);
+}
+
+/* Configuración de Dispositivos (Engranaje) */
+async function loadDevices(){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.enumerateDevices)return;
+  const devs = await navigator.mediaDevices.enumerateDevices();
+  $('#cfg-mic').innerHTML = '<option value="">Predeterminado</option>' + devs.filter(d=>d.kind==='audioinput').map((m,i)=>`<option value="${m.deviceId}">${m.label||'Micrófono '+(i+1)}</option>`).join('');
+  $('#cfg-cam').innerHTML = '<option value="">Predeterminado</option>' + devs.filter(d=>d.kind==='videoinput').map((c,i)=>`<option value="${c.deviceId}">${c.label||'Cámara '+(i+1)}</option>`).join('');
+  if(selMic) $('#cfg-mic').value = selMic;
+  if(selCam) $('#cfg-cam').value = selCam;
+}
+$('#pcg').onclick=$('#bcg').onclick=()=>{loadDevices(); $('#cfg-modal').classList.remove('hide')};
+$('#cfg-close').onclick=()=>$('#cfg-modal').classList.add('hide');
+$('#cfg-mic').onchange=e=>{ selMic=e.target.value; if(t0) fixDevice('audio'); else requestMedia(); };
+$('#cfg-cam').onchange=e=>{ selCam=e.target.value; if(t0) fixDevice('video'); else requestMedia(); };
 
 /* ===== prejoin ===== */
 try{$('#nm').value=localStorage.getItem('meetly-name')||''}catch(e){}
 setTimeout(()=>{try{$('#nm').focus()}catch(e){}},300);
-/* ----- permisos de cámara y micrófono ----- */
 const inFrame=window.self!==window.top;
 const VID={facingMode:'user',width:{ideal:1280},height:{ideal:720},frameRate:{ideal:30,max:30}},AUD={echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1};
 const gum=c=>navigator.mediaDevices.getUserMedia(c);
-/* ----- calidad y latencia ----- */
 const RTC={iceServers:[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302','stun:stun.cloudflare.com:3478']},
   {urls:['turn:openrelay.metered.ca:80','turn:openrelay.metered.ca:443','turns:openrelay.metered.ca:443?transport=tcp'],username:'openrelayproject',credential:'openrelayproject'}],
   iceCandidatePoolSize:4,bundlePolicy:'max-bundle'};
@@ -341,7 +392,6 @@ function hookPC(p){
   tune(p);setTimeout(()=>tuneAll(),1500);
 }
 const canMedia=()=>window.isSecureContext&&navigator.mediaDevices&&navigator.mediaDevices.getUserMedia;
-if(!navigator.mediaDevices||!navigator.mediaDevices.getDisplayMedia)$('#bs').classList.add('hide');
 function helpText(){
   const ua=navigator.userAgent,ios=/iPad|iPhone|iPod/.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1),and=/Android/.test(ua);
   let t=ios?'En iPhone o iPad: toca “aA” en la barra de direcciones → Ajustes del sitio web → pon Cámara y Micrófono en “Permitir”. Luego pulsa Reintentar.'
@@ -364,7 +414,11 @@ const errKind=e=>{const n=e&&e.name;return n==='NotReadableError'||n==='AbortErr
 async function requestMedia(){
   if(!canMedia()){showPerm('insecure');return false}
   $('#pb').disabled=true;let st=null,kind='denied';
-  try{st=await gum({video:VID,audio:AUD})}
+  try{
+    const v = selCam ? {...VID, deviceId:{exact:selCam}} : VID;
+    const a = selMic ? {...AUD, deviceId:{exact:selMic}} : AUD;
+    st=await gum({video:v,audio:a});
+  }
   catch(e){
     kind=errKind(e);
     if(kind!=='denied'){const tr=[];for(const c of [{audio:AUD},{video:VID}]){try{tr.push(...(await gum(c)).getTracks())}catch(x){}}if(tr.length)st=new MediaStream(tr)}
@@ -403,7 +457,12 @@ function setMic(v){if(!hasMic){needDev('audio');return}mic=v;local.getAudioTrack
 function setCam(v){if(!hasCam){needDev('video');return}cam=v;local.getVideoTracks().forEach(t=>t.enabled=v);syncBtns();const t=el('me');t&&t.classList.toggle('nocam',!v&&!scrTrack);bcast({t:'cam',on:v})}
 async function fixDevice(kind){
   if(!canMedia())return toast('Se necesita una página https para usar '+(kind==='audio'?'el micrófono':'la cámara'));
-  try{const s=await gum(kind==='audio'?{audio:AUD}:{video:VID});swapTrack(s.getTracks()[0]);toast(kind==='audio'?'Micrófono activado':'Cámara activada')}
+  try{
+    const req = kind==='audio' 
+      ? {audio: selMic ? {...AUD, deviceId:{exact:selMic}} : AUD} 
+      : {video: selCam ? {...VID, deviceId:{exact:selCam}} : VID};
+    const s=await gum(req);swapTrack(s.getTracks()[0]);toast(kind==='audio'?'Micrófono activado':'Cámara activada');
+  }
   catch(e){const k=errKind(e);toast(k==='denied'?'Permiso bloqueado: actívalo desde el candado junto a la dirección y vuelve a intentarlo':k==='busy'?'Otra aplicación está usando ese dispositivo':'No se encontró el dispositivo')}
 }
 function swapTrack(nt){
@@ -417,12 +476,13 @@ function swapTrack(nt){
 }
 async function flipCam(){
   if(!hasCam||scrTrack)return;
+  selCam = ''; // Quita la selección manual para poder usar la trasera
   const old=facing,wasOff=!cam;facing=facing==='user'?'environment':'user';
   local.getVideoTracks().forEach(t=>t.stop());
   try{const s=await gum({video:{facingMode:{ideal:facing},width:{ideal:1280},height:{ideal:720}}});swapTrack(s.getVideoTracks()[0]);if(wasOff)setCam(false)}
   catch(e){facing=old;try{swapTrack((await gum({video:{facingMode:{ideal:facing}}})).getVideoTracks()[0])}catch(x){}toast('No se pudo girar la cámara')}
 }
-function updFlip(){$('#bf').classList.toggle('hide',!(t0&&hasCam&&matchMedia('(pointer:coarse)').matches))}
+function updFlip(){$('#bf').classList.toggle('hide',!(t0&&hasCam&&matchMedia('(pointer:coarse)').matches)); if(t0) $('#bcg').classList.remove('hide');}
 $('#bf').onclick=flipCam;
 $('#pm').onclick=$('#bm').onclick=()=>setMic(!mic);
 $('#pc').onclick=$('#bc').onclick=()=>setCam(!cam);
@@ -435,6 +495,8 @@ $('#go').onclick=async()=>{
   try{localStorage.setItem('meetly-name',name)}catch(e){}
   if(mode==='join'){code=$('#cd').value.replace(/[^A-Z0-9]/g,'');if(code.length!==6)return toast('El código tiene 6 caracteres')}else code=gen();
   b.disabled=true;b.textContent='Conectando…';
+  
+  // AudioContext se reanuda al haber interacción del usuario
   actx=new (window.AudioContext||window.webkitAudioContext)();actx.resume();ensureTracks();
   try{await startPeer()}catch(e){b.disabled=false;setMode(mode);toast(e.message||'No se pudo conectar');try{peer&&peer.destroy()}catch(_){}peer=null;return}
   showRoom();
@@ -474,9 +536,9 @@ function showRoom(){
   $('#cc').textContent=fc(code);$('#wc').textContent=fc(code);
   const t=addTile('me',name+' (Tú)',name,true);t.classList.add('me');
   const v=t.querySelector('video');v.srcObject=local;v.muted=true;t.classList.toggle('nocam',!cam);t.classList.toggle('mutedm',!mic);
-  addAudio('me',local);t0=Date.now();updFlip();initPip();renderPeople();layout();
+  addAudio('me',local);t0=Date.now();updFlip();renderPeople();layout();
   
-  // Modificado para detectar el "deslizar para atrás" (Swipe back)
+  // Guardar estado para poder interceptar Swipe Back
   try{history.pushState({room:true},'','#'+code)}catch(e){}
   
   toast(isHost?'Reunión creada · '+fc(code):'Te uniste a la reunión');
@@ -530,7 +592,10 @@ function onMsg(p,m){
   else if(m.t==='scr'){p.scr=m.on;apply(p);if(m.on){pinned=p.id;layout();toast('🖥️ '+p.name+' está presentando')}else if(pinned===p.id){pinned=null;layout()}}
   else if(m.t==='cam'){p.cam=m.on;apply(p)}
   else if(m.t==='mic'){p.mic=m.on;apply(p);renderPeople()}
-  else if(m.t==='hand'){p.hand=m.on;apply(p);if(m.on)toast('✋ '+p.name+' levantó la mano')}
+  else if(m.t==='hand'){
+    p.hand=m.on; apply(p);
+    if(m.on){ toast('✋ '+p.name+' levantó la mano'); playHandSound(); }
+  }
   else if(m.t==='chat')addMsg(p.name,m.text,false);
   else if(m.t==='react')burst(p.id,m.e);
   else if(m.t==='rec'){p.rec=m.on;toast(m.on?'🔴 '+p.name+' empezó a grabar la reunión':p.name+' detuvo la grabación');recBanner()}
@@ -595,7 +660,10 @@ function stopShare(){
   if(!scrTrack)return;scrTrack.stop();scrTrack=null;setSend(local.getVideoTracks()[0]);bcast({t:'scr',on:false});setTimeout(tuneAll,250);
   const v=el('me').querySelector('video');v.srcObject=local;v.classList.remove('scr');el('me').classList.toggle('nocam',!cam);$('#bs').classList.remove('on');
 }
-function setHand(v){hand=v;$('#bh').classList.toggle('on',hand);el('me').classList.toggle('up',hand);bcast({t:'hand',on:hand})}
+function setHand(v){
+  hand=v; $('#bh').classList.toggle('on',hand); el('me').classList.toggle('up',hand); bcast({t:'hand',on:hand});
+  if(hand) playHandSound();
+}
 $('#bh').onclick=()=>setHand(!hand);
 function burst(id,e){const t=el(id);if(!t)return;const s=document.createElement('span');s.className='fl';s.textContent=e;s.style.left=(15+Math.random()*60)+'%';t.appendChild(s);setTimeout(()=>s.remove(),2500)}
 $('#bx').onclick=e=>{e.stopPropagation();$('#rx').classList.toggle('hide')};
@@ -615,9 +683,13 @@ function tab(p){
   $$('.pn').forEach(x=>x.classList.toggle('a',x.id==='p-'+p));
   if(p==='chat'){unread=0;$('#bg').classList.add('hide')}
 }
-$$('.tabs button').forEach(b=>b.onclick=()=>tab(b.dataset.p));
+$$('.tabs button').forEach(b=>b.onclick=()=>{if(b.dataset.p) tab(b.dataset.p)});
 const toggleTab=p=>(!$('#side').classList.contains('hide')&&$('#p-'+p).classList.contains('a'))?$('#side').classList.add('hide'):tab(p);
 $('#bt').onclick=()=>toggleTab('chat');$('#bp').onclick=()=>toggleTab('ppl');
+
+/* Botón cerrar panel en móviles */
+$('#x-side').onclick=()=>$('#side').classList.add('hide');
+
 $('#bi').onclick=$('#cc').onclick=$('#w2').onclick=()=>copy(link(),'Enlace de la reunión copiado');
 $('#w1').onclick=()=>copy(fc(code),'Código copiado');
 document.addEventListener('keydown',e=>{
@@ -625,7 +697,7 @@ document.addEventListener('keydown',e=>{
   const k=e.key.toLowerCase();if(k==='m')setMic(!mic);else if(k==='v')setCam(!cam);else if(k==='h')setHand(!hand);else if(k==='g')$('#br').click();else if(k==='p')$('#bpip').click();
 });
 
-/* ===== grabación ===== */
+/* ===== grabación completa (Renderizado por Canvas) ===== */
 let rec=null,chunks=[],cv,cx,drawH,tmH,rt0,nrec=0;
 function rr(x,y,w,h,r){cx.beginPath();cx.moveTo(x+r,y);cx.arcTo(x+w,y,x+w,y+h,r);cx.arcTo(x+w,y+h,x,y+h,r);cx.arcTo(x,y+h,x,y,r);cx.arcTo(x,y,x+w,y,r);cx.closePath()}
 function rects(W,H,n,pi){
@@ -693,7 +765,7 @@ function saveRec(){
 }
 $('#br').onclick=()=>rec?stopRec():startRec();
 
-/* ===== reloj interno (no se frena en segundo plano) ===== */
+/* ===== reloj interno con Web Worker ===== */
 let tk=0,recOn=false,spk=null;
 function speakLoop(){
   A.forEach((a,id)=>{
@@ -704,7 +776,6 @@ function speakLoop(){
 function tick(){
   tk++;if(tk%4===0)speakLoop();
   if(recOn&&cx)draw();
-  if(pcx&&(pipIs()||tk%8===0))pipDraw();
 }
 (function(){
   let ok=false;
@@ -712,53 +783,36 @@ function tick(){
   setTimeout(()=>{if(!ok)setInterval(tick,33)},1500);
 })();
 
-/* ===== mini ventana (imagen en imagen) ===== */
-const pipv=$('#pipv');let pcv=null,pcx=null,pipAuto=false;
-const pipIs=()=>document.pictureInPictureElement===pipv||pipv.webkitPresentationMode==='picture-in-picture';
-function pipDraw(){
-  if(!pcx||!t0)return;const o=cx;cx=pcx;
-  try{
-    const W=640,H=360;cx.fillStyle='#0d0e1a';cx.fillRect(0,0,W,H);
-    let pres=scrTrack?'me':null;PE.forEach(p=>{if(p.scr&&p.tile)pres=p.id});
-    const first=[...PE.values()].find(p=>p.tile),sid=(spk&&el(spk)&&spk)||(first&&first.id)||'me',pt=pres&&el(pres),st=el(sid);
-    if(pt){
-      paintTile(pt,0,0,W,H,0,true);
-      if(st&&sid!==pres)paintTile(st,W-174,H-102,166,94,12,false);
-      const nm=(pres==='me'?'Tú':PE.get(pres).name)+' presenta';cx.font='14px sans-serif';const tw=cx.measureText(nm).width;
-      cx.fillStyle='rgba(124,156,255,.95)';rr(8,8,tw+22,26,13);cx.fill();cx.fillStyle='#fff';cx.textAlign='left';cx.textBaseline='middle';cx.fillText(nm,19,21);
-    }else if(st)paintTile(st,0,0,W,H,0,false);
-  }finally{cx=o}
-}
-function initPip(){
-  if(pcv)return;
-  if(!(document.pictureInPictureEnabled||pipv.webkitSetPresentationMode)||!HTMLCanvasElement.prototype.captureStream)return;
-  pcv=document.createElement('canvas');pcv.width=640;pcv.height=360;pcx=pcv.getContext('2d');pcx.fillStyle='#0d0e1a';pcx.fillRect(0,0,640,360);
-  pipv.srcObject=pcv.captureStream(30);pipv.play().catch(()=>{});$('#bpip').classList.remove('hide');
-  pipv.addEventListener('enterpictureinpicture',()=>$('#bpip').classList.add('on'));
-  pipv.addEventListener('leavepictureinpicture',()=>{$('#bpip').classList.remove('on');pipAuto=false});
-  try{navigator.mediaSession.metadata=new MediaMetadata({title:'Meetly · '+fc(code)})}catch(e){}
-  [['enterpictureinpicture',()=>pipStart(true)],['togglemicrophone',()=>setMic(!mic)],['togglecamera',()=>setCam(!cam)],['hangup',()=>$('#be').click()]]
-    .forEach(([a,f])=>{try{navigator.mediaSession.setActionHandler(a,f)}catch(e){}});
-  document.addEventListener('visibilitychange',()=>{
-    if(!t0)return;
-    if(document.hidden){if(!pipIs())pipStart(true)}
-    else if(pipAuto&&pipIs()){pipStop();pipAuto=false}
-  });
-}
-async function pipStart(auto){
-  if(!pcv)return;
-  try{
-    pipDraw();await pipv.play().catch(()=>{});
-    if(pipv.requestPictureInPicture)await pipv.requestPictureInPicture();
-    else if(pipv.webkitSetPresentationMode)pipv.webkitSetPresentationMode('picture-in-picture');
-    pipAuto=!!auto;if(!auto)toast('Mini ventana activada');
-  }catch(e){if(!auto)toast('No se pudo abrir la mini ventana en este navegador')}
-}
-async function pipStop(){
-  try{if(document.pictureInPictureElement)await document.exitPictureInPicture();else if(pipv.webkitSetPresentationMode)pipv.webkitSetPresentationMode('inline')}catch(e){}
-  $('#bpip').classList.remove('on');
-}
-$('#bpip').onclick=()=>pipIs()?pipStop():pipStart(false);
+/* ===== Picture in Picture Nativo ===== */
+$('#bpip').onclick=async()=>{
+  let target = [...PE.values()].find(p=>p.scr)?.tile?.querySelector('video');
+  if(!target) target = [...PE.values()].find(p=>p.tile)?.tile?.querySelector('video');
+  if(!target) target = document.getElementById('t-me')?.querySelector('video');
+  
+  if(target){
+    try{
+      if(document.pictureInPictureElement !== target) await target.requestPictureInPicture();
+      else await document.exitPictureInPicture();
+    }catch(e){toast('PiP no soportado en este navegador')}
+  }
+};
+
+/* ===== Advertencias de Salida ===== */
+window.addEventListener('popstate',()=>{
+  if(t0){ 
+    $('#exit-overlay').classList.remove('hide'); 
+    try{history.pushState({room:true},'','#'+code)}catch(e){} 
+  }
+});
+$('#eo-stay').onclick=()=>$('#exit-overlay').classList.add('hide');
+$('#eo-leave').onclick=()=>$('#be').click();
+
+window.onbeforeunload = e => {
+  if (t0) { 
+    e.preventDefault(); 
+    e.returnValue = ''; 
+  }
+};
 
 /* ===== salir ===== */
 $('#be').onclick=()=>{
@@ -766,28 +820,6 @@ $('#be').onclick=()=>{
   window.onbeforeunload=null;if(rec)stopRec();stopShare();
   PE.forEach(p=>{try{p.call&&p.call.close()}catch(e){}});try{peer&&peer.destroy()}catch(e){}
   location.href=location.href.split('#')[0];
-};
-
-/* ===== Cerrar panel (Móvil y PC) y Prevenir salida ===== */
-$('#x-side').onclick=()=>$('#side').classList.add('hide');
-
-window.addEventListener('popstate',(e)=>{
-  if(t0){ 
-    $('#exit-overlay').classList.remove('hide'); 
-    try{history.pushState({room:true},'','#'+code)}catch(err){}
-  }
-});
-$('#eo-stay').onclick=()=>$('#exit-overlay').classList.add('hide');
-$('#eo-leave').onclick=()=>{
-  $('#exit-overlay').classList.add('hide');
-  $('#be').click(); 
-};
-
-window.onbeforeunload = e => {
-  if (t0) { 
-    e.preventDefault();
-    e.returnValue = ''; 
-  }
 };
 </script>
 </body>
