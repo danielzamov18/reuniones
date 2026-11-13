@@ -258,7 +258,7 @@ function setMode(m){
 }
 $('#m-new').onclick=()=>setMode('new');$('#m-join').onclick=()=>{setMode('join');$('#cd').focus()};
 $('#cd').oninput=e=>{let v=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);e.target.value=v.length>3?v.slice(0,3)+'-'+v.slice(3):v};
-['nm','cd'].forEach(i=>$('#'+i).onkeydown=e=>e.key==='Enter'&&$('#go').click());
+['nm','cd'].forEach(i=>$('#'+i).addEventListener('keydown',e=>{if(e.key==='Enter')$('#go').click()}));
 function syncBtns(){[['pm','bm'],['pc','bc']].forEach(([a,b],i)=>[a,b].forEach(x=>$('#'+x).classList.toggle('off',!(i?cam:mic))))}
 function setMic(v){mic=v;local.getAudioTracks().forEach(t=>t.enabled=v);syncBtns();const t=el('me');t&&t.classList.toggle('mutedm',!v);bcast({t:'mic',on:v});renderPeople()}
 function setCam(v){if(!hasCam)return toast('No hay cámara disponible');cam=v;local.getVideoTracks().forEach(t=>t.enabled=v);syncBtns();const t=el('me');t&&t.classList.toggle('nocam',!v&&!scrTrack);bcast({t:'cam',on:v})}
@@ -443,7 +443,7 @@ function addMsg(who,text,mine){
   if(!mine)toast('💬 '+who+': '+text.slice(0,50));
 }
 const sendChat=()=>{const v=$('#ci').value.trim();if(!v)return;addMsg(name+' (Tú)',v,true);bcast({t:'chat',text:v});$('#ci').value=''};
-$('#cs').onclick=sendChat;$('#ci').onkeydown=e=>e.key==='Enter'&&sendChat();
+$('#cs').onclick=sendChat;$('#ci').addEventListener('keydown',e=>{if(e.key==='Enter')sendChat()});
 function tab(p){
   $('#side').classList.remove('hide');
   $$('.tabs button').forEach(b=>b.classList.toggle('a',b.dataset.p===p));
