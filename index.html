@@ -30,6 +30,14 @@ svg{width:22px;height:22px;fill:currentColor}
 .pv{position:relative;width:min(620px,92vw);aspect-ratio:16/10;background:#000;border-radius:24px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.5),0 0 0 1px var(--sf2)}
 .pv video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
 .pv .bar{position:absolute;bottom:16px;left:0;right:0;display:flex;justify-content:center;gap:14px}
+.tile.me.back video:not(.scr){transform:none}
+#perm{position:absolute;inset:0;z-index:4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:28px;text-align:center;background:radial-gradient(circle at 50% 30%,#23244a,#12132a)}
+#perm .pi{width:76px;height:76px;border-radius:50%;background:var(--g);display:flex;align-items:center;justify-content:center;animation:ring2 2s infinite}
+#perm .pi svg{width:34px;height:34px;fill:#fff}
+@keyframes ring2{0%{box-shadow:0 0 0 0 rgba(192,132,252,.6)}70%{box-shadow:0 0 0 24px rgba(192,132,252,0)}}
+#perm h3{font-size:20px;font-weight:600}
+#perm p{font-size:14px;color:var(--mt);line-height:1.55;max-width:430px}
+.lnk{color:var(--ac);font-size:14px;padding:8px;text-decoration:underline}
 .pv .msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--mt);padding:24px;text-align:center;background:#12132a}
 .card{width:min(380px,92vw);display:flex;flex-direction:column;gap:14px;background:var(--sf);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--sf2);border-radius:24px;padding:28px}
 .logo{display:flex;align-items:center;gap:10px;font-size:24px;font-weight:600;letter-spacing:-.5px}
@@ -145,7 +153,7 @@ input:focus{border-color:var(--ac);box-shadow:0 0 0 4px rgba(124,156,255,.18)}
   <div class="pwrap">
     <div class="pv">
       <video id="pv" autoplay playsinline muted></video>
-      <div class="msg hide" id="err"></div>
+      <div id="perm" class="hide"><div class="pi" id="pi"></div><h3 id="pt"></h3><p id="pd"></p><button class="pill" id="pb">Permitir acceso</button><button class="lnk" id="ps">Entrar sin cámara ni micrófono</button></div>
       <div class="bar"><button class="rb" id="pm" data-tip="Micrófono"></button><button class="rb" id="pc" data-tip="Cámara"></button></div>
     </div>
     <div class="card">
@@ -189,6 +197,7 @@ input:focus{border-color:var(--ac);box-shadow:0 0 0 4px rgba(124,156,255,.18)}
       <button class="rb" id="bm" data-tip="Micrófono (M)"></button>
       <button class="rb" id="bc" data-tip="Cámara (V)"></button>
       <button class="rb" id="bs" data-tip="Compartir pantalla"></button>
+      <button class="rb hide" id="bf" data-tip="Girar cámara"></button>
       <button class="rb" id="bx" data-tip="Reacciones"></button>
       <button class="rb rec" id="br" data-tip="Grabar (G)"></button>
       <button class="rb" id="bh" data-tip="Levantar la mano (H)"></button>
@@ -215,11 +224,12 @@ end:'M12 8.5c-3.3 0-6.3 1-8.7 2.8-.4.3-.5.9-.1 1.3l1.7 1.7c.3.3.7.4 1.1.2l2.5-1.
 ppl:'M16 11a3 3 0 1 0-3-3 3 3 0 0 0 3 3zM8 11a3 3 0 1 0-3-3 3 3 0 0 0 3 3zm0 2c-2.3 0-7 1.2-7 3.5V19h14v-2.5C15 14.2 10.3 13 8 13zm8 0c-.3 0-.6 0-1 .1 1.2.9 2 2 2 3.4V19h6v-2.5c0-2.3-4.7-3.5-7-3.5z',
 chat:'M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z',
 copy:'M16 1H4a2 2 0 0 0-2 2v14h2V3h12zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11z',
+flip:'M12 4V1L8 5l4 4V6a6 6 0 0 1 5.7 7.9l1.5 1.5A8 8 0 0 0 12 4zm-5.7 2.1L4.8 7.6A8 8 0 0 0 12 20v3l4-4-4-4v3a6 6 0 0 1-5.7-7.9z',
 smile:'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-3.5 7.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm7 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zM12 18c-2.300 0-4.200-1.400-5-3.500h10c-.8 2.100-2.700 3.500-5 3.500z',
 pin:'M16 9V4h1V2H7v2h1v5l-2 3v2h5.2v7h1.6v-7H18v-2z'};
 const svg=k=>`<svg viewBox="0 0 24 24"><path d="${IC[k]}"/></svg>`;
-[['pm','mic'],['pc','cam'],['bm','mic'],['bc','cam'],['bs','scr'],['bx','smile'],['br','rec'],['bh','hand'],['be','end'],['bi','copy'],['bp','ppl'],['bt','chat']].forEach(([i,k])=>$('#'+i).insertAdjacentHTML('afterbegin',svg(k)));
-$('#lg').innerHTML=svg('cam');
+[['pm','mic'],['pc','cam'],['bm','mic'],['bc','cam'],['bs','scr'],['bf','flip'],['bx','smile'],['br','rec'],['bh','hand'],['be','end'],['bi','copy'],['bp','ppl'],['bt','chat']].forEach(([i,k])=>$('#'+i).insertAdjacentHTML('afterbegin',svg(k)));
+$('#lg').innerHTML=svg('cam');$('#pi').innerHTML=svg('cam');
 
 /* ===== utilidades ===== */
 const PFX='meetly26-',ALPH='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -235,20 +245,64 @@ async function copy(t,msg){try{await navigator.clipboard.writeText(t)}catch(e){c
 const link=()=>location.href.split('#')[0]+'#'+code;
 
 /* ===== estado ===== */
-let local=new MediaStream(),name='',mic=true,cam=true,hand=false,scrTrack=null,hasCam=true;
+let local=new MediaStream(),name='',mic=false,cam=false,hand=false,scrTrack=null,hasCam=false,hasMic=false,facing='user';
 let mode='new',code='',peer=null,isHost=false,pinned=null,t0=0,unread=0,actx=null,dest=null;
 const PE=new Map(),A=new Map();
 
 /* ===== prejoin ===== */
 try{$('#nm').value=localStorage.getItem('meetly-name')||''}catch(e){}
 setTimeout(()=>{try{$('#nm').focus()}catch(e){}},300);
-(async()=>{
-  try{local=await navigator.mediaDevices.getUserMedia({video:true,audio:true})}
+/* ----- permisos de cámara y micrófono ----- */
+const inFrame=window.self!==window.top;
+const VID={facingMode:'user',width:{ideal:1280},height:{ideal:720}},AUD={echoCancellation:true,noiseSuppression:true,autoGainControl:true};
+const gum=c=>navigator.mediaDevices.getUserMedia(c);
+const canMedia=()=>window.isSecureContext&&navigator.mediaDevices&&navigator.mediaDevices.getUserMedia;
+if(!navigator.mediaDevices||!navigator.mediaDevices.getDisplayMedia)$('#bs').classList.add('hide');
+function helpText(){
+  const ua=navigator.userAgent,ios=/iPad|iPhone|iPod/.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1),and=/Android/.test(ua);
+  let t=ios?'En iPhone o iPad: toca “aA” en la barra de direcciones → Ajustes del sitio web → pon Cámara y Micrófono en “Permitir”. Luego pulsa Reintentar.'
+   :and?'En Android: toca el candado (o el icono de ajustes) junto a la dirección → Permisos → activa Cámara y Micrófono. Luego pulsa Reintentar.'
+   :'En computadora: haz clic en el candado (o el icono de cámara) a la izquierda de la dirección y activa Cámara y Micrófono. Luego pulsa Reintentar.';
+  if(inFrame)t+=' Además estás viendo esto dentro de otra página: ábrela en su propia pestaña, porque dentro de una vista previa el navegador suele bloquear los permisos.';
+  return t;
+}
+function showPerm(kind){
+  const T={
+    ask:['Activa tu cámara y micrófono','Para que los demás te vean y te escuchen, el navegador te pedirá permiso. Pulsa el botón y elige “Permitir”.','Permitir acceso'],
+    denied:['Permiso bloqueado',helpText(),'Reintentar'],
+    insecure:['Se necesita una conexión segura','El navegador solo deja usar la cámara y el micrófono en páginas https:// (como GitHub Pages) o en localhost. Abre la página desde su enlace https.','Reintentar'],
+    busy:['No se pudo usar el dispositivo','Otra aplicación (Zoom, Teams, otra pestaña…) puede estar usando la cámara o el micrófono. Ciérrala y pulsa Reintentar.','Reintentar'],
+    none:['No se encontró cámara ni micrófono','Conecta uno y pulsa Reintentar, o entra sin cámara ni micrófono.','Reintentar']
+  }[kind];
+  $('#pt').textContent=T[0];$('#pd').textContent=T[1];$('#pb').textContent=T[2];$('#perm').classList.remove('hide');
+}
+const errKind=e=>{const n=e&&e.name;return n==='NotReadableError'||n==='AbortError'?'busy':n==='NotFoundError'||n==='OverconstrainedError'?'none':'denied'};
+async function requestMedia(){
+  if(!canMedia()){showPerm('insecure');return false}
+  $('#pb').disabled=true;let st=null,kind='denied';
+  try{st=await gum({video:VID,audio:AUD})}
   catch(e){
-    try{local=await navigator.mediaDevices.getUserMedia({audio:true});hasCam=false;cam=false}
-    catch(e2){hasCam=false;cam=false;mic=false;$('#err').classList.remove('hide');$('#err').textContent='No se pudo acceder a la cámara ni al micrófono. Revisa los permisos del navegador. Aun así puedes entrar a la reunión.'}
+    kind=errKind(e);
+    if(kind!=='denied'){const tr=[];for(const c of [{audio:AUD},{video:VID}]){try{tr.push(...(await gum(c)).getTracks())}catch(x){}}if(tr.length)st=new MediaStream(tr)}
   }
-  $('#pv').srcObject=local;syncBtns();
+  $('#pb').disabled=false;
+  if(!st){showPerm(kind);return false}
+  local.getTracks().forEach(t=>t.stop());local=st;
+  hasMic=st.getAudioTracks().length>0;hasCam=st.getVideoTracks().length>0;mic=hasMic;cam=hasCam;
+  $('#pv').srcObject=local;$('#perm').classList.add('hide');syncBtns();
+  if(!hasCam&&hasMic)toast('No se detectó cámara: entrarás solo con micrófono');
+  else if(!hasMic&&hasCam)toast('No se detectó micrófono: entrarás solo con cámara');
+  return true;
+}
+$('#pb').onclick=()=>requestMedia();
+$('#ps').onclick=()=>$('#perm').classList.add('hide');
+(async()=>{
+  if(!canMedia())return showPerm('insecure');
+  let st=[];
+  try{st=await Promise.all(['camera','microphone'].map(n=>navigator.permissions.query({name:n}).then(x=>x.state)))}catch(e){}
+  if(st.length&&st.every(x=>x==='granted'))requestMedia();
+  else if(st.includes('denied'))showPerm('denied');
+  else showPerm('ask');
 })();
 const h0=location.hash.replace(/[^A-Za-z0-9]/g,'').toUpperCase();
 if(h0.length===6){setMode('join');$('#cd').value=fc(h0)}
@@ -260,8 +314,32 @@ $('#m-new').onclick=()=>setMode('new');$('#m-join').onclick=()=>{setMode('join')
 $('#cd').oninput=e=>{let v=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);e.target.value=v.length>3?v.slice(0,3)+'-'+v.slice(3):v};
 ['nm','cd'].forEach(i=>$('#'+i).addEventListener('keydown',e=>{if(e.key==='Enter')$('#go').click()}));
 function syncBtns(){[['pm','bm'],['pc','bc']].forEach(([a,b],i)=>[a,b].forEach(x=>$('#'+x).classList.toggle('off',!(i?cam:mic))))}
-function setMic(v){mic=v;local.getAudioTracks().forEach(t=>t.enabled=v);syncBtns();const t=el('me');t&&t.classList.toggle('mutedm',!v);bcast({t:'mic',on:v});renderPeople()}
-function setCam(v){if(!hasCam)return toast('No hay cámara disponible');cam=v;local.getVideoTracks().forEach(t=>t.enabled=v);syncBtns();const t=el('me');t&&t.classList.toggle('nocam',!v&&!scrTrack);bcast({t:'cam',on:v})}
+const needDev=k=>t0?fixDevice(k):requestMedia();
+function setMic(v){if(!hasMic){needDev('audio');return}mic=v;local.getAudioTracks().forEach(t=>t.enabled=v);syncBtns();const t=el('me');t&&t.classList.toggle('mutedm',!v);bcast({t:'mic',on:v});renderPeople()}
+function setCam(v){if(!hasCam){needDev('video');return}cam=v;local.getVideoTracks().forEach(t=>t.enabled=v);syncBtns();const t=el('me');t&&t.classList.toggle('nocam',!v&&!scrTrack);bcast({t:'cam',on:v})}
+async function fixDevice(kind){
+  if(!canMedia())return toast('Se necesita una página https para usar '+(kind==='audio'?'el micrófono':'la cámara'));
+  try{const s=await gum(kind==='audio'?{audio:AUD}:{video:VID});swapTrack(s.getTracks()[0]);toast(kind==='audio'?'Micrófono activado':'Cámara activada')}
+  catch(e){const k=errKind(e);toast(k==='denied'?'Permiso bloqueado: actívalo desde el candado junto a la dirección y vuelve a intentarlo':k==='busy'?'Otra aplicación está usando ese dispositivo':'No se encontró el dispositivo')}
+}
+function swapTrack(nt){
+  const kind=nt.kind;
+  local.getTracks().filter(t=>t.kind===kind).forEach(t=>{local.removeTrack(t);t.stop()});local.addTrack(nt);
+  PE.forEach(p=>{const pc=p.call&&p.call.peerConnection;if(!pc)return;const sd=pc.getSenders().find(x=>x.track&&x.track.kind===kind);if(sd&&!(kind==='video'&&scrTrack))sd.replaceTrack(nt)});
+  if(kind==='video'){hasCam=true;cam=true}else{hasMic=true;mic=true;addAudio('me',local)}
+  const t=el('me');
+  if(t){if(kind==='video'&&!scrTrack){const v=t.querySelector('video');v.srcObject=null;v.srcObject=local;t.classList.remove('nocam')}t.classList.toggle('mutedm',!mic);t.classList.toggle('back',facing==='environment')}
+  syncBtns();bcast({t:kind==='video'?'cam':'mic',on:true});renderPeople();updFlip();
+}
+async function flipCam(){
+  if(!hasCam||scrTrack)return;
+  const old=facing,wasOff=!cam;facing=facing==='user'?'environment':'user';
+  local.getVideoTracks().forEach(t=>t.stop());
+  try{const s=await gum({video:{facingMode:{ideal:facing},width:{ideal:1280},height:{ideal:720}}});swapTrack(s.getVideoTracks()[0]);if(wasOff)setCam(false)}
+  catch(e){facing=old;try{swapTrack((await gum({video:{facingMode:{ideal:facing}}})).getVideoTracks()[0])}catch(x){}toast('No se pudo girar la cámara')}
+}
+function updFlip(){$('#bf').classList.toggle('hide',!(t0&&hasCam&&matchMedia('(pointer:coarse)').matches))}
+$('#bf').onclick=flipCam;
 $('#pm').onclick=$('#bm').onclick=()=>setMic(!mic);
 $('#pc').onclick=$('#bc').onclick=()=>setCam(!cam);
 
@@ -269,6 +347,7 @@ $('#pc').onclick=$('#bc').onclick=()=>setCam(!cam);
 $('#go').onclick=async()=>{
   const b=$('#go');name=$('#nm').value.trim();
   if(!name){$('#nm').classList.add('shake');setTimeout(()=>$('#nm').classList.remove('shake'),400);$('#nm').focus();return toast('Escribe tu nombre para continuar')}
+  if(!$('#perm').classList.contains('hide'))return toast('Primero permite la cámara y el micrófono, o elige entrar sin ellos');
   try{localStorage.setItem('meetly-name',name)}catch(e){}
   if(mode==='join'){code=$('#cd').value.replace(/[^A-Z0-9]/g,'');if(code.length!==6)return toast('El código tiene 6 caracteres')}else code=gen();
   b.disabled=true;b.textContent='Conectando…';
@@ -311,7 +390,7 @@ function showRoom(){
   $('#cc').textContent=fc(code);$('#wc').textContent=fc(code);
   const t=addTile('me',name+' (Tú)',name,true);t.classList.add('me');
   const v=t.querySelector('video');v.srcObject=local;v.muted=true;t.classList.toggle('nocam',!cam);t.classList.toggle('mutedm',!mic);
-  addAudio('me',local);t0=Date.now();renderPeople();layout();
+  addAudio('me',local);t0=Date.now();updFlip();renderPeople();layout();
   try{history.replaceState(null,'','#'+code)}catch(e){}
   toast(isHost?'Reunión creada · '+fc(code):'Te uniste a la reunión');
 }
@@ -491,7 +570,7 @@ function draw(){
     if(t.classList.contains('nocam')||v.readyState<2){
       const r=Math.min(w,h)/6;cx.fillStyle=col(nm.replace(' (Tú)',''));cx.beginPath();cx.arc(x+w/2,y+h/2,r,0,7);cx.fill();
       cx.fillStyle='#fff';cx.font=`${r}px sans-serif`;cx.textAlign='center';cx.textBaseline='middle';cx.fillText(ini(nm),x+w/2,y+h/2+2);
-    }else drawCover(v,x,y,w,h,v.classList.contains('scr'),t.classList.contains('me')&&!v.classList.contains('scr'));
+    }else drawCover(v,x,y,w,h,v.classList.contains('scr'),t.classList.contains('me')&&!v.classList.contains('scr')&&!t.classList.contains('back'));
     cx.restore();
     if(t.classList.contains('sp')){cx.strokeStyle='#3ddc97';cx.lineWidth=4;rr(x,y,w,h,18);cx.stroke()}
     const l=nm+(t.classList.contains('up')?'  ✋':'')+(t.classList.contains('mutedm')?'  🔇':'');
